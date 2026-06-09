@@ -419,7 +419,7 @@ function renderTaskCard(task) {
       const row = el("div", "subtask");
       const top = el("label", "subtask-top");
       const sc = el("input"); sc.type = "checkbox"; sc.checked = !!sub.completed;
-      sc.onchange = () => { sub.completed = sc.checked; scheduleSave(); };
+      sc.onchange = () => { sub.completed = sc.checked; scheduleSave(); renderTareas(); };
       top.appendChild(sc);
       top.appendChild(el("span", null, escapeHtml(sub.name)));
       row.appendChild(top);
