@@ -346,7 +346,10 @@ function renderTareas() {
   visible.forEach(t => c.appendChild(renderTaskCard(t)));
 
   // barra emitir
-  const done = currentUser.tasks.filter(t => t.completed).length;
+  const done = currentUser.tasks.filter(t => {
+    if (t.isCategory) return (t.subtasks || []).some(s => s.completed) || !!(t.otrosText && t.otrosText.trim());
+    return t.completed;
+  }).length;
   const bar = el("div", "emit-bar glass");
   bar.appendChild(el("span", "progress-text", `✅ ${done} de ${currentUser.tasks.length} tareas marcadas`));
   const emit = el("button", "btn-primary", "Emitir reporte del día");
