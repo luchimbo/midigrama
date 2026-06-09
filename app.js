@@ -10,7 +10,6 @@ let currentUser = null;     // clon del template con estado dinámico del día
 let currentDay = null;      // "YYYY-MM-DD" (hora Argentina)
 let activeTab = "tareas";
 let freqFilter = "Todos";
-let pinBuffer = "";
 let pinTarget = null;
 let saveTimer = null;
 let emittedToday = false;     // ¿ya emitió reporte hoy?
@@ -74,40 +73,30 @@ function renderLogin() {
 
 function openPinPad(user) {
   pinTarget = user;
-  pinBuffer = "";
   $("#user-grid").classList.add("hidden");
   $("#pin-pad").classList.remove("hidden");
   $("#pin-user-name").textContent = user.name;
-  renderPinDots();
-  const keys = $("#pin-keys");
-  keys.innerHTML = "";
-  [..."123456789", "", "0", "⌫"].forEach(k => {
-    const key = el("button", "pin-key", k);
-    if (k === "") { key.style.visibility = "hidden"; }
-    key.onclick = () => pressPin(k);
-    keys.appendChild(key);
-  });
+  const input = $("#pin-input");
+  input.value = "";
+  // solo dígitos, máximo 4
+  input.oninput = () => { input.value = input.value.replace(/\D/g, "").slice(0, 4); };
+  setTimeout(() => input.focus(), 50);
 }
 
-function renderPinDots() {
-  const dots = $("#pin-dots");
-  dots.innerHTML = "";
-  for (let i = 0; i < 4; i++) {
-    dots.appendChild(el("div", "pin-dot" + (i < pinBuffer.length ? " filled" : "")));
+function submitPin() {
+  const input = $("#pin-input");
+  const value = input.value.trim();
+  if (value.length !== 4) { toast("El PIN tiene 4 dígitos", "warn"); input.focus(); return; }
+  if (value === pinTarget.pin) {
+    login(pinTarget);
+  } else {
+    toast("PIN incorrecto", "err");
+    input.value = "";
+    input.focus();
   }
 }
 
-function pressPin(k) {
-  if (k === "⌫") { pinBuffer = pinBuffer.slice(0, -1); renderPinDots(); return; }
-  if (!/^\d$/.test(k) || pinBuffer.length >= 4) return;
-  pinBuffer += k;
-  renderPinDots();
-  if (pinBuffer.length === 4) {
-    if (pinBuffer === pinTarget.pin) { login(pinTarget); }
-    else { toast("PIN incorrecto", "err"); pinBuffer = ""; setTimeout(renderPinDots, 300); }
-  }
-}
-
+$("#pin-form").onsubmit = (e) => { e.preventDefault(); submitPin(); };
 $("#pin-back").onclick = () => openLoginGrid();
 function openLoginGrid() {
   $("#pin-pad").classList.add("hidden");

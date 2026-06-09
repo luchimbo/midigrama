@@ -14,10 +14,13 @@
       <p class="subtitle">Centro de Operaciones Diario</p>
       <div id="user-grid" class="user-grid"></div>
       <div id="pin-pad" class="pin-pad hidden">
-        <p class="pin-label">Hola, <strong id="pin-user-name"></strong> — ingresá tu PIN</p>
-        <div class="pin-dots" id="pin-dots"></div>
-        <div class="pin-keys" id="pin-keys"></div>
-        <button class="btn-ghost" id="pin-back">← Cambiar usuario</button>
+        <p class="pin-label">Hola, <strong id="pin-user-name"></strong> — escribí tu PIN</p>
+        <form id="pin-form" class="pin-form" autocomplete="off">
+          <input id="pin-input" class="pin-input" type="password" inputmode="numeric"
+                 maxlength="4" autocomplete="off" placeholder="• • • •" aria-label="PIN" />
+          <button type="submit" class="btn-primary" id="pin-submit">Ingresar</button>
+        </form>
+        <button type="button" class="btn-ghost" id="pin-back">← Cambiar usuario</button>
       </div>
     </div>
     <div class="mode-badge" id="mode-badge"></div>
