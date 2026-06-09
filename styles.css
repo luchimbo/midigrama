@@ -144,9 +144,17 @@ body {
   background: rgba(0,0,0,0.25); border: 1px solid var(--panel-border);
   color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit;
 }
-.subtasks { margin-top: 10px; padding-left: 34px; display: grid; gap: 6px; }
-.subtask { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-.subtask input { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+.subtasks { margin-top: 10px; padding-left: 34px; display: grid; gap: 12px; }
+.subtask { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.subtask-top { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.subtask-top input[type="checkbox"] { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+.subtask-note {
+  width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--panel-border);
+  color: var(--text); border-radius: 8px; padding: 7px 10px; font-size: 13px; font-family: inherit;
+}
+.subtask-note:focus { outline: none; border-color: var(--accent); }
+.otros-box { margin-top: 12px; padding-left: 34px; display: grid; gap: 6px; }
+.otros-label { font-size: 13px; color: var(--muted); font-weight: 600; }
 .review-badge { font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-left: 8px; font-weight: 700; }
 .review-rejected { background: var(--err); color: #fff; }
 .review-approved { background: var(--ok); color: #04101f; }

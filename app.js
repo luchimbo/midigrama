@@ -413,21 +413,42 @@ function renderTaskCard(task) {
   if (task.isCategory) {
     const subs = el("div", "subtasks");
     (task.subtasks || []).forEach(sub => {
-      const row = el("label", "subtask");
+      const row = el("div", "subtask");
+      const top = el("label", "subtask-top");
       const sc = el("input"); sc.type = "checkbox"; sc.checked = !!sub.completed;
       sc.onchange = () => { sub.completed = sc.checked; scheduleSave(); };
-      row.appendChild(sc);
-      row.appendChild(el("span", null, escapeHtml(sub.name)));
+      top.appendChild(sc);
+      top.appendChild(el("span", null, escapeHtml(sub.name)));
+      row.appendChild(top);
+      // campo de texto propio de cada subtarea
+      const sn = el("input", "subtask-note");
+      sn.type = "text";
+      sn.placeholder = `Detalle de ${sub.name}...`;
+      sn.value = sub.notes || "";
+      sn.oninput = () => { sub.notes = sn.value; scheduleSave(); };
+      row.appendChild(sn);
       subs.appendChild(row);
     });
     main.appendChild(subs);
-  }
 
-  const notes = el("textarea", "task-notes");
-  notes.placeholder = "Detalle / observaciones...";
-  notes.value = task.notes || "";
-  notes.oninput = () => { task.notes = notes.value; scheduleSave(); };
-  main.appendChild(notes);
+    // campo "Otros" para cosas que no están en la lista
+    const otrosBox = el("div", "otros-box");
+    otrosBox.appendChild(el("label", "otros-label", "➕ Otros"));
+    const ot = el("input", "subtask-note");
+    ot.type = "text";
+    ot.placeholder = "Agregá otra cosa que hayas hecho...";
+    ot.value = task.otrosText || "";
+    ot.oninput = () => { task.otrosText = ot.value; scheduleSave(); };
+    otrosBox.appendChild(ot);
+    main.appendChild(otrosBox);
+  } else {
+    // tareas normales: una sola nota general
+    const notes = el("textarea", "task-notes");
+    notes.placeholder = "Detalle / observaciones...";
+    notes.value = task.notes || "";
+    notes.oninput = () => { task.notes = notes.value; scheduleSave(); };
+    main.appendChild(notes);
+  }
 
   head.appendChild(main);
   card.appendChild(head);
