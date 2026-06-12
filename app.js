@@ -118,6 +118,7 @@ function freshUserClone(template) {
       t.otrosText = "";
     }
   });
+  u.extras = [];
   return u;
 }
 
@@ -141,6 +142,7 @@ function applySavedState(user, saved) {
     }
   });
   user.novedades = Array.isArray(saved.novedades) ? saved.novedades.slice() : [];
+  user.extras = Array.isArray(saved.extras) ? saved.extras.map(e => ({ ...e })) : [];
 }
 
 function serializeState(user) {
@@ -154,7 +156,8 @@ function serializeState(user) {
       subtasks: t.isCategory ? (t.subtasks || []).map(s => ({ name: s.name, completed: !!s.completed, notes: s.notes || "" })) : undefined,
       otrosText: t.isCategory ? (t.otrosText || "") : undefined
     })),
-    novedades: user.novedades || []
+    novedades: user.novedades || [],
+    extras: (user.extras || []).map(e => ({ text: e.text || "", notes: e.notes || "" }))
   };
 }
 
@@ -200,6 +203,11 @@ function buildReportTasksFromState(template, state) {
       }
     } else if (s.completed) {
       out.push({ name: tmpl.name, notes: (s.notes || "").trim(), sourceTaskId: tmpl.id, reviewStatus: s.reviewStatus || null, reviewComment: s.reviewComment || "" });
+    }
+  });
+  (state.extras || []).forEach(ex => {
+    if (ex.text && ex.text.trim()) {
+      out.push({ name: ex.text.trim(), notes: (ex.notes || "").trim(), sourceTaskId: null, reviewStatus: null, reviewComment: "" });
     }
   });
   return out;
@@ -345,6 +353,9 @@ function renderTareas() {
   if (!visible.length) c.appendChild(el("div", "empty-state", "No hay tareas para este filtro."));
   visible.forEach(t => c.appendChild(renderTaskCard(t)));
 
+  // tareas extra
+  c.appendChild(renderExtrasBox());
+
   // barra emitir
   const done = currentUser.tasks.filter(t => {
     if (t.isCategory) return (t.subtasks || []).some(s => s.completed) || !!(t.otrosText && t.otrosText.trim());
@@ -387,6 +398,46 @@ function renderNovedadesBox() {
     list.appendChild(li);
   });
   box.appendChild(list);
+  return box;
+}
+
+function renderExtrasBox() {
+  const box = el("div", "novedades-box glass");
+  box.appendChild(el("h3", null, "➕ Tareas extra / observaciones"));
+  const row = el("div", "nov-input-row");
+  const input = el("input");
+  input.placeholder = "Ej: Reunión con proveedor, revisión de presupuesto...";
+  input.onkeydown = e => { if (e.key === "Enter") addExtra(); };
+  const add = el("button", "btn-ghost", "Agregar");
+  function addExtra() {
+    const v = input.value.trim();
+    if (!v) return;
+    currentUser.extras = currentUser.extras || [];
+    currentUser.extras.push({ text: v, notes: "" });
+    input.value = "";
+    scheduleSave();
+    renderTareas();
+  }
+  add.onclick = addExtra;
+  row.appendChild(input); row.appendChild(add);
+  box.appendChild(row);
+
+  (currentUser.extras || []).forEach((ex, i) => {
+    const item = el("div", "extra-item");
+    const top = el("div", "extra-top");
+    const lbl = el("span", "extra-text", escapeHtml(ex.text));
+    const del = el("button", "del", "×");
+    del.onclick = () => { currentUser.extras.splice(i, 1); scheduleSave(); renderTareas(); };
+    top.appendChild(lbl); top.appendChild(del);
+    item.appendChild(top);
+    const notes = el("input", "subtask-note");
+    notes.type = "text";
+    notes.placeholder = "Detalle / observaciones...";
+    notes.value = ex.notes || "";
+    notes.oninput = () => { ex.notes = notes.value; scheduleSave(); };
+    item.appendChild(notes);
+    box.appendChild(item);
+  });
   return box;
 }
 
@@ -476,6 +527,11 @@ function buildReportTasks(user) {
       }
     } else if (t.completed) {
       out.push({ name: t.name, notes: (t.notes || "").trim(), sourceTaskId: t.id, reviewStatus: t.reviewStatus || null, reviewComment: t.reviewComment || "" });
+    }
+  });
+  (user.extras || []).forEach(ex => {
+    if (ex.text && ex.text.trim()) {
+      out.push({ name: ex.text.trim(), notes: (ex.notes || "").trim(), sourceTaskId: null, reviewStatus: null, reviewComment: "" });
     }
   });
   return out;
