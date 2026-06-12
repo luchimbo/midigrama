@@ -699,7 +699,10 @@ async function renderGeneral() {
     const total = u.tasks.length;
     let done = 0;
     if (s && Array.isArray(s.tasks)) {
-      done = s.tasks.filter(t => t.completed).length;
+      done = s.tasks.filter(t => {
+        if (t.subtasks) return t.subtasks.some(s => s.completed) || !!(t.otrosText && t.otrosText.trim());
+        return t.completed;
+      }).length;
     }
     const pct = total ? Math.round((done / total) * 100) : 0;
     const row = el("div", "ov-row glass");
