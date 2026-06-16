@@ -158,6 +158,7 @@ body {
 .extra-item { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
 .extra-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .extra-text { font-size: 14px; font-weight: 600; flex: 1; }
+.task-rejected { background: rgba(231,76,60,0.12) !important; border-left: 3px solid var(--err) !important; }
 .review-badge { font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-left: 8px; font-weight: 700; }
 .review-rejected { background: var(--err); color: #fff; }
 .review-approved { background: var(--ok); color: #04101f; }

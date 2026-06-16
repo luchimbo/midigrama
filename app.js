@@ -295,7 +295,7 @@ function scheduleSave() {
 // ============================================================
 //  SHELL (topbar + tabs)
 // ============================================================
-function renderApp() {
+async function renderApp() {
   $("#current-user-chip").textContent = `${currentUser.name} · ${currentUser.area}`;
   $("#today-label").textContent = "📅 " + dayKeyToDisplay(currentDay);
 
@@ -314,7 +314,14 @@ function renderApp() {
     nav.appendChild(b);
   });
 
-  if (activeTab === "tareas") renderTareas();
+  if (activeTab === "tareas") {
+    // Refresh silencioso: recarga estado desde DB para ver rechazos del manager sin reloguear
+    try {
+      const saved = await DB.loadDailyState(currentUser.id, currentDay);
+      if (saved) applySavedState(currentUser, saved);
+    } catch (e) { /* silencioso; renderiza con estado en memoria */ }
+    renderTareas();
+  }
   else if (activeTab === "bitacora") renderBitacora();
   else if (activeTab === "general") renderGeneral();
   else if (activeTab === "calidad") renderCalidad();
@@ -442,7 +449,7 @@ function renderExtrasBox() {
 }
 
 function renderTaskCard(task) {
-  const card = el("div", "task-card glass");
+  const card = el("div", "task-card glass" + (task.reviewStatus === "rejected" ? " task-rejected" : ""));
   const head = el("div", "task-head");
 
   if (!task.isCategory) {
@@ -523,10 +530,15 @@ function buildReportTasks(user) {
         let detail = subsDone.map(s => s.notes ? `${s.name}: ${s.notes}` : s.name).join(" | ");
         if (hasNotes) detail = (detail ? detail + " | " : "") + t.notes.trim();
         if (hasOtros) detail += (detail ? ` (+Otros: ${t.otrosText.trim()})` : `Otros: ${t.otrosText.trim()}`);
-        out.push({ name: t.name, notes: detail, sourceTaskId: t.id, reviewStatus: t.reviewStatus || null, reviewComment: t.reviewComment || "" });
+        // Al re-emitir una tarea rechazada, se resetea a pendiente de revisión
+        const rs = t.reviewStatus === "rejected" ? null : (t.reviewStatus || null);
+        const rc = t.reviewStatus === "rejected" ? "" : (t.reviewComment || "");
+        out.push({ name: t.name, notes: detail, sourceTaskId: t.id, reviewStatus: rs, reviewComment: rc });
       }
     } else if (t.completed) {
-      out.push({ name: t.name, notes: (t.notes || "").trim(), sourceTaskId: t.id, reviewStatus: t.reviewStatus || null, reviewComment: t.reviewComment || "" });
+      const rs = t.reviewStatus === "rejected" ? null : (t.reviewStatus || null);
+      const rc = t.reviewStatus === "rejected" ? "" : (t.reviewComment || "");
+      out.push({ name: t.name, notes: (t.notes || "").trim(), sourceTaskId: t.id, reviewStatus: rs, reviewComment: rc });
     }
   });
   (user.extras || []).forEach(ex => {
@@ -734,14 +746,25 @@ async function renderCalidad() {
   if (!reports.length) { c.appendChild(el("div", "empty-state", "Todavía nadie emitió reporte hoy.")); return; }
 
   reports.forEach(r => {
+    const pendingTasks = (r.tasks || []).filter(t => t.reviewStatus !== "approved");
+    const allApproved = pendingTasks.length === 0 && (r.tasks || []).length > 0;
+
     const card = el("div", "report-card glass");
     card.appendChild(el("div", "report-user", `${escapeHtml(r.user_name)} · ${escapeHtml(r.area)} — ${escapeHtml(r.timestamp || "")}`));
+
+    if (allApproved) {
+      card.appendChild(el("p", "view-sub", "✔ Todo aprobado"));
+      c.appendChild(card);
+      return;
+    }
+
     const ul = el("ul", "report-tasks");
-    (r.tasks || []).forEach((t, i) => {
+    pendingTasks.forEach(t => {
+      // índice real en el array original para reviewTask
+      const i = r.tasks.indexOf(t);
       const li = el("li");
       let badge = "";
       if (t.reviewStatus === "rejected") badge = ' <span class="review-badge review-rejected">Rechazada</span>';
-      if (t.reviewStatus === "approved") badge = ' <span class="review-badge review-approved">Aprobada</span>';
       li.innerHTML = `<span class="t-name">${escapeHtml(t.name)}${badge}</span>` +
         (t.notes ? `<span class="t-notes">${linkify(t.notes)}</span>` : "") +
         (t.reviewComment ? `<span class="t-notes review-comment">↳ ${escapeHtml(t.reviewComment)}</span>` : "");
