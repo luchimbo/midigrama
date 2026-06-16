@@ -797,6 +797,12 @@ async function renderCalidad() {
       ul.appendChild(li);
     });
     card.appendChild(ul);
+    if ((r.novedades || []).length) {
+      const novSection = el("div", null);
+      novSection.style.marginTop = "10px";
+      r.novedades.forEach(n => novSection.appendChild(el("span", "nov-tag", "📌 " + escapeHtml(n))));
+      card.appendChild(novSection);
+    }
     c.appendChild(card);
   });
 }
