@@ -739,11 +739,20 @@ async function renderCalidad() {
   c.appendChild(el("p", "view-sub", "Revisá y aprobá (o rechazá) las tareas reportadas hoy por el equipo."));
 
   let reports = [];
-  try { reports = await DB.loadReports({ day: currentDay }); }
+  try {
+    const all = await DB.loadReports({});
+    // último reporte por usuario (ya vienen ordenados por timestamp_ms desc)
+    const seen = new Set();
+    reports = all.filter(r => {
+      if (seen.has(r.user_id)) return false;
+      seen.add(r.user_id);
+      return true;
+    });
+  }
   catch (e) { c.appendChild(el("div", "empty-state", "No se pudo cargar.")); return; }
 
   reports = reports.filter(r => r.user_id !== currentUser.id);
-  if (!reports.length) { c.appendChild(el("div", "empty-state", "Todavía nadie emitió reporte hoy.")); return; }
+  if (!reports.length) { c.appendChild(el("div", "empty-state", "Todavía no hay reportes del equipo.")); return; }
 
   reports.forEach(r => {
     const pendingTasks = (r.tasks || []).filter(t => t.reviewStatus !== "approved");
