@@ -495,11 +495,17 @@ function renderTaskCard(task) {
     // campo "Otros" para cosas que no están en la lista
     const otrosBox = el("div", "otros-box");
     otrosBox.appendChild(el("label", "otros-label", "➕ Otros"));
-    const ot = el("input", "subtask-note");
-    ot.type = "text";
+    const ot = el("textarea", "subtask-note otros-textarea");
     ot.placeholder = "Agregá otra cosa que hayas hecho...";
     ot.value = task.otrosText || "";
-    ot.oninput = () => { task.otrosText = ot.value; scheduleSave(); };
+    ot.rows = 1;
+    ot.oninput = () => {
+      task.otrosText = ot.value;
+      ot.style.height = "auto";
+      ot.style.height = ot.scrollHeight + "px";
+      scheduleSave();
+    };
+    setTimeout(() => { if (ot.value) { ot.style.height = "auto"; ot.style.height = ot.scrollHeight + "px"; } }, 0);
     otrosBox.appendChild(ot);
     main.appendChild(otrosBox);
   } else {

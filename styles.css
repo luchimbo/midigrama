@@ -155,6 +155,7 @@ body {
 .subtask-note:focus { outline: none; border-color: var(--accent); }
 .otros-box { margin-top: 12px; padding-left: 34px; display: grid; gap: 6px; }
 .otros-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+.otros-textarea { resize: none; overflow: hidden; min-height: 36px; }
 .extra-item { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
 .extra-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .extra-text { font-size: 14px; font-weight: 600; flex: 1; }
